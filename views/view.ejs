@@ -135,15 +135,15 @@
                             <td><img src="data:image/png;base64,<%= image.thumbnails.mError %>" onclick="window.open('data:image/png;base64,<%= image.fullImages.mError %>')" alt="Material Error Image"></td>
                             <td><img src="data:image/png;base64,<%= image.thumbnails.corrected %>" onclick="window.open('data:image/png;base64,<%= image.fullImages.corrected %>')" alt="Corrected Image"></td>
                             <td>
-                              <form action="/upload-corrected/<%= image._id %>" method="post" enctype="multipart/form-data" class="upload-form">
-                                  <!-- Hidden file input -->
-                                  <input type="file" class="form-control-file" name="corrected" id="file-input-<%= image._id %>" style="display: none;">
-                                  <!-- Icon button that triggers the file input -->
-                                  <label for="file-input-<%= image._id %>" class="btn btn-info btn-sm">
-                                      <i class="bi bi-upload"></i>
-                                  </label>
-                                  <button type="submit" class="btn btn-info btn-sm" style="display: none;">Upload</button>
-                              </form>
+                                <form action="/upload-corrected/<%= image._id %>" method="post" enctype="multipart/form-data" class="upload-form">
+                                    <!-- Hidden file input -->
+                                    <input type="file" class="form-control-file" name="corrected" id="<%= image._id %>" style="display: none;" onchange="submitForm('<%= image._id %>')">
+                                    <!-- Icon button that triggers the file input -->
+                                    <label for="<%= image._id %>" class="btn btn-info btn-sm">
+                                        <i class="bi bi-upload"></i>
+                                    </label>
+                                    <button type="submit" class="btn btn-info btn-sm" id="submit-button-<%= image._id %>" style="display: none;">Upload</button>
+                                </form>
                           </td>                          
                             <td><%= image.approvalStatus %></td>
                             <td>
@@ -159,4 +159,15 @@
         </div>
     </div>
 </body>
+<script>
+    function submitForm(imageId) {
+    // Check if the file input has a file
+    var fileInput = document.getElementById(imageId);
+    if (fileInput.files.length > 0) {
+        // Unhide the submit button
+        var submitButton = document.getElementById('submit-button-' + imageId);
+        submitButton.click(); // Trigger form submission
+    }
+}
+</script>
 </html>

@@ -188,23 +188,32 @@ app.post('/delete-image/:id', async (req, res) => {
 
 
 app.post('/upload-corrected/:id', upload.single('corrected'), async (req, res) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    if (!req.file) {
-        return res.status(400).send('No file uploaded.');
-    }
+  if (!req.file) {
+    console.error('No file uploaded.');
+    return res.status(400).send('No file uploaded.');
+  }
 
-    try {
-        const correctedBuffer = await sharp(req.file.buffer).resize(250, 250).jpeg({ quality: 80 }).toBuffer();
-        const correctedBase64 = correctedBuffer.toString('base64');
+  try {
+    const correctedBuffer = await sharp(req.file.buffer)
+        .resize(250, 250)
+        .jpeg({ quality: 80 })
+        .toBuffer();
+    
+    const correctedBase64 = `${correctedBuffer.toString('base64')}`;
 
-        await ImageData.findByIdAndUpdate(id, { 'thumbnails.corrected': correctedBase64 });
-        res.redirect('/view');
-    } catch (error) {
-        console.error('Failed to upload corrected image:', error);
-        res.status(500).send('Error uploading corrected image');
-    }
+    await ImageData.findByIdAndUpdate(id, {
+        'thumbnails.corrected': correctedBase64
+    }, { new: true });
+
+    res.redirect('/view');
+  } catch (error) {
+    console.error('Failed to upload corrected image:', error);
+    res.status(500).send('Error uploading corrected image: ' + error.message);
+  }
 });
+
 
 app.get('/aql-results', async (req, res) => {
   try {
