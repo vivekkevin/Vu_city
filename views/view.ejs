@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VuCity-QC-LOD350</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .container { 
+            margin-top: 20px; 
+            max-width: 1750px;
+        }
+        .form-control, .btn { margin-bottom: 10px; }
+        img { width: 200px; height: auto; } /* Ensures images are not too large */
+        table {
+            width: 100%; /* Make the table expand to the full width of its container */
+            min-width: 600px; /* Minimum width of the table */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-3 text-center">VuCity-QC-Buildings</h1>
+
+        <!-- Filter Form -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="mb-3">
+                <a href="/upload-page" class="btn btn-secondary">View Uploaded Images</a>
+                <a href="/aql-results" class="btn btn-secondary">AQL</a>
+                <a href="/generate-report" class="btn btn-secondary">AQL</a>
+            </div>
+
+                <form action="/view" method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="tileNumber" class="form-label">Tile Number:</label>
+                        <input type="text" class="form-control" id="tileNumber" name="tileNumber">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="errorType" class="form-label">Error Type:</label>
+                        <select class="form-select" id="errorType" name="errorType">
+                            <option value="">Select Type</option>
+                            <option value="Missing_Features">Missing Features</option>
+                            <option value="Interpolation_Error">Interpolation Error</option>
+                            <option value="Material_Error">Material Error</option>
+                            <option value="Accuracy">Accuracy</option>
+                            <option value="STL_Error">STL Error</option>
+                            <option value="Ngons_Error">Ngons Error</option>
+                            <!-- Add other error types as needed -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="buildingNumber" class="form-label">Building Number:</label>
+                        <input type="text" class="form-control" id="buildingNumber" name="buildingNumber">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="approvalStatus" class="form-label">Approval Status:</label>
+                        <select class="form-select" id="approvalStatus" name="approvalStatus">
+                            <option value="">Any</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Yes">Approved</option>
+                            <option value="No">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Pagination Controls -->
+        <nav aria-label="Page navigation example">
+            <ul class="pagination">
+            <% function createQueryString(page) {
+                let queryString = `?page=${page}`;
+                if (filters.tileNumber) queryString += `&tileNumber=${filters.tileNumber}`;
+                if (filters.errorType) queryString += `&errorType=${filters.errorType}`;
+                if (filters.buildingNumber) queryString += `&buildingNumber=${filters.buildingNumber}`;
+                if (filters.approvalStatus) queryString += `&approvalStatus=${filters.approvalStatus}`;
+                return queryString;
+            } %>
+        
+            <% if (current > 1) { %>
+                <li class="page-item"><a class="page-link" href="<%= createQueryString(1) %>">First</a></li>
+                <li class="page-item"><a class="page-link" href="<%= createQueryString(current - 1) %>">Previous</a></li>
+            <% } %>
+        
+            <% let i = (Number(current) > 5 ? Number(current) - 4 : 1) %>
+            <% if (i !== 1) { %>
+                <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+            <% } %>
+            <% for (; i <= (Number(current) + 4) && i <= pages; i++) { %>
+                <% if (current == i) { %>
+                <li class="page-item active"><a class="page-link" href="#"><%= i %></a></li>
+                <% } else { %>
+                <li class="page-item"><a class="page-link" href="<%= createQueryString(i) %>"><%= i %></a></li>
+                <% } %>
+            <% } %>
+            <% if (i < pages) { %>
+                <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                <li class="page-item"><a class="page-link" href="<%= createQueryString(pages) %>">Last</a></li>
+            <% } %>
+        
+            <% if (current < pages) { %>
+                <li class="page-item"><a class="page-link" href="<%= createQueryString(Number(current) + 1) %>">Next</a></li>
+            <% } %>
+            </ul>
+        </nav>
+        
+        <!-- Image Table -->
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Tile Number</th>
+                        <th>Error Comments</th>
+                        <th>Error Type</th>
+                        <th>Building Number</th>
+                        <th>QC Error Thumbnail</th>
+                        <th>MError Thumbnail</th>
+                        <th>Corrected Thumbnail</th>
+                        <th>UCImage</th>
+                        <th>Approval Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% images.forEach(function(image) { %>
+                        <tr>
+                            <td><%= image.tileNumber %></td>
+                            <td><%= image.errorComments %></td>
+                            <td><%= image.errorType %></td>
+                            <td><%= image.buildingNumber %></td>
+                            <td><img src="data:image/png;base64,<%= image.thumbnails.qcError %>" onclick="window.open('data:image/png;base64,<%= image.fullImages.qcError %>')" alt="QC Error Image"></td>
+                            <td><img src="data:image/png;base64,<%= image.thumbnails.mError %>" onclick="window.open('data:image/png;base64,<%= image.fullImages.mError %>')" alt="Material Error Image"></td>
+                            <td><img src="data:image/png;base64,<%= image.thumbnails.corrected %>" onclick="window.open('data:image/png;base64,<%= image.fullImages.corrected %>')" alt="Corrected Image"></td>
+                            <td>
+                              <form action="/upload-corrected/<%= image._id %>" method="post" enctype="multipart/form-data" class="upload-form">
+                                  <!-- Hidden file input -->
+                                  <input type="file" class="form-control-file" name="corrected" id="file-input-<%= image._id %>" style="display: none;">
+                                  <!-- Icon button that triggers the file input -->
+                                  <label for="file-input-<%= image._id %>" class="btn btn-info btn-sm">
+                                      <i class="bi bi-upload"></i>
+                                  </label>
+                                  <button type="submit" class="btn btn-info btn-sm" style="display: none;">Upload</button>
+                              </form>
+                          </td>                          
+                            <td><%= image.approvalStatus %></td>
+                            <td>
+                                <form action="/approve-image/<%= image._id %>" method="post">
+                                    <input type="submit" class="btn btn-success" name="approvalStatus" value="Yes">
+                                    <input type="submit" class="btn btn-danger" name="approvalStatus" value="No">
+                                </form>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

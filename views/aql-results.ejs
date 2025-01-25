@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AQL Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {background-color: #f5f5f5;}
+        .chart-container {
+            width: 80%;
+            margin: 0 auto;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AQL Results</h1>
+    <a href="/view" class="btn btn-secondary">Error views</a>
+    <table border="1">
+        <tr>
+            <th>Tile Number</th>
+            <th>Total Records</th>
+            <th>Error Count</th>
+            <th>Error Rate</th>
+            <th>AQL Pass/Fail</th>
+        </tr>
+        <% for(const tileNumber in aqlResults) { %>
+        <tr>
+            <td><%= tileNumber %></td>
+            <td><%= aqlResults[tileNumber].totalRecords %></td>
+            <td><%= aqlResults[tileNumber].errorCount %></td>
+            <td><%= aqlResults[tileNumber].errorRate %></td>
+            <td><%= aqlResults[tileNumber].pass ? 'Pass' : 'Fail' %></td>
+        </tr>
+        <% } %>
+    </table>
+
+    <div class="chart-container">
+        <canvas id="aqlChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <canvas id="buildingErrorChart"></canvas>
+    </div>    
+
+    <!-- Button Container -->
+    <div class="button-container">
+        <button type="button" class="btn btn-primary" onclick="location.reload();">Refresh Data</button>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('aqlChart').getContext('2d');
+        const buildingCtx = document.getElementById('buildingErrorChart').getContext('2d'); // New context for the building error chart
+        const aqlData = <%- JSON.stringify(aqlResults) %>;
+        const buildingErrorData = <%- JSON.stringify(buildingErrorResults) %>; // Make sure to send this data from your server
+    
+        const labels = Object.keys(aqlData);
+        const errorCounts = labels.map(label => aqlData[label].errorCount);
+        const colors = labels.map(label => aqlData[label].errorCount === 0 ? 'green' : 'red');
+    
+        const aqlChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Error Count',
+                    data: errorCounts,
+                    backgroundColor: colors
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                maintainAspectRatio: false
+            }
+        });
+    
+        // New chart for Building Error Records
+        const buildingLabels = Object.keys(buildingErrorData);
+        const buildingErrorCounts = buildingLabels.map(label => buildingErrorData[label].errorCount);
+        const buildingColors = buildingLabels.map(label => buildingErrorData[label].errorCount === 0 ? 'green' : 'red');
+    
+        const buildingErrorChart = new Chart(buildingCtx, {
+            type: 'bar',
+            data: {
+                labels: buildingLabels,
+                datasets: [{
+                    label: 'Building Error Count',
+                    data: buildingErrorCounts,
+                    backgroundColor: buildingColors
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                maintainAspectRatio: false
+            }
+        });
+    </script>
+    
+</body>
+</html>
